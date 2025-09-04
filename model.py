@@ -20,11 +20,13 @@
 
 from flask import Flask, request, jsonify
 from transformers import pipeline
+import os
 
 app = Flask(__name__)
 
-
+# Load model from local folder
 classifier = pipeline("text-classification", model="./Complaint", tokenizer="./Complaint")
+
 label_map = {
     "LABEL_0": "Road",
     "LABEL_1": "Sanitation",
@@ -39,7 +41,7 @@ def predict():
     result = classifier(complaint_text)[0]
     return jsonify({
         "complaint": complaint_text,
-        "predicted_label": result["label"],
+        "predicted_label": label_map[result["label"]],
         "confidence": float(result["score"])
     })
 
@@ -56,4 +58,6 @@ def predict_get():
     })
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Use Render-provided port, default to 5000
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
